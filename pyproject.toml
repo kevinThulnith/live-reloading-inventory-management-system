@@ -1,0 +1,25 @@
+[project]
+name = "lr-3-0"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pytz",
+    "PyJWT",
+    "Faker",
+    "Django",
+    "pillow",
+    "asgiref",
+    "sqlparse",
+    "gunicorn",
+    "whitenoise",
+    "python-dotenv",
+    "django-filter",
+    "psycopg2-binary",
+    "django-cors-headers",
+    "djangorestframework",
+    "djangorestframework-simplejwt",
+    "whitenoise[brotli]",
+    "dj-database-url>=3.0.1",
+]
