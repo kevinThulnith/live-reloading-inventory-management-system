@@ -1,33 +1,22 @@
 import { FaBarsStaggered, FaAnglesRight } from "react-icons/fa6";
 import { useState, useCallback, memo } from "react";
 import { NavLink } from "react-router-dom";
-import { FiLogOut } from "react-icons/fi";
-import viteLogo from "../assets/vite.png";
+import product from "../assets/product.png";
 
 // !Navigation items configuration
-const navItems = [
-  { path: "/add-product", label: "Add Product" },
-  { path: "/Supplier", label: "Suppliers" },
-  { path: "/Category", label: "Categories" },
-  { path: "/Product", label: "Products" },
-  { path: "/Sales", label: "Sales" },
-  { path: "/Purchase", label: "Purchase" },
-];
+const navItems = [{ path: "/add-product", label: "Add Product" }];
 
 // !Memoized NavLink component for better performance
-const NavItem = memo(({ to, label, onClick, className, icon }) => (
+const NavItem = memo(({ to, label, onClick, className }) => (
   <NavLink to={to} className={className} onClick={onClick}>
     {label}
-    {icon && icon}
   </NavLink>
 ));
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const toggleMenu = useCallback(() => setIsMenuOpen((prev) => !prev), []);
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
-
+  const toggleMenu = useCallback(() => setIsMenuOpen((prev) => !prev), []);
   const getNavLinkClass = useCallback(
     ({ isActive }) => `
     block py-2 ${
@@ -41,7 +30,7 @@ function Navbar() {
     <div className="fixed top-0 left-0 z-50 bg-white shadow-md w-full py-4">
       <div className="md:container md:mx-auto mx-4 flex justify-between items-center">
         <div className="flex">
-          <img className="h-9 mr-2" src={viteLogo} alt="Logo" />
+          <img className="h-9 mr-3" src={product} alt="Logo" />
           <NavLink
             to="/"
             className="text-orange-500"
@@ -90,7 +79,6 @@ function Navbar() {
             label="Logout"
             className={getNavLinkClass}
             onClick={closeMenu}
-            icon={<FiLogOut className="inline-block ml-2" />}
           />
         </div>
 
@@ -107,12 +95,7 @@ function Navbar() {
               className={getNavLinkClass}
             />
           ))}
-          <NavItem
-            to="/logout"
-            label="Logout"
-            className={getNavLinkClass}
-            icon={<FiLogOut className="inline-block ml-2" />}
-          />
+          <NavItem to="/logout" label="Logout" className={getNavLinkClass} />
         </div>
       </div>
     </div>

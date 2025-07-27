@@ -55,6 +55,7 @@ body::-webkit-scrollbar {
   align-items: center;
   --color: hsl(0, 0%, 87%);
   --animation: 2s ease-in-out infinite;
+  z-index: 999;
 }
 
 .loader .circle {
