@@ -17,3 +17,4 @@ wheels/
 
 # Media files
 backend/media/product
+*.msi

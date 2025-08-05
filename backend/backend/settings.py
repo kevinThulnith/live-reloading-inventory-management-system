@@ -66,12 +66,13 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # !Third-party apps
+    "channels",
     "corsheaders",
     "rest_framework",
     "whitenoise.runserver_nostatic",
     "rest_framework_simplejwt.token_blacklist",
     # !Local apps
-    "api",
+    "api.apps.ApiConfig",
 ]
 
 MIDDLEWARE = [
@@ -106,7 +107,26 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "backend.wsgi.application"
+ASGI_APPLICATION = "backend.asgi.application"
 
+# !without Redis
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels.layers.InMemoryChannelLayer",
+#     },
+# }
+
+# !with Redis
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [
+                (os.getenv("REDIS_HOST", "127.0.0.1"), os.getenv("REDIS_PORT", 6379))
+            ],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

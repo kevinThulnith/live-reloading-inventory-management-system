@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-Time Product Feed</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-bg: #f0f2f5;
+        --color-card-bg: #ffffff;
+        --color-text: #333;
+        --color-text-light: #666;
+        --color-shadow: rgba(0, 0, 0, 0.1);
+        --color-green: #28a745;
+        --color-blue: #007bff;
+        --color-red: #dc3545;
+        --color-orange: #fd7e14;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Poppins", sans-serif;
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .container {
+        max-width: 700px;
+        width: 100%;
+        background-color: var(--color-card-bg);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px var(--color-shadow);
+        overflow: hidden;
+      }
+
+      header {
+        text-align: center;
+        padding: 2rem;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      h1 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      #status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      #status-indicator::before {
+        content: "";
+        display: block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+      }
+
+      #status-indicator.status-connecting {
+        background-color: #fff3e0;
+        color: var(--color-orange);
+      }
+      #status-indicator.status-connecting::before {
+        background-color: var(--color-orange);
+      }
+
+      #status-indicator.status-connected {
+        background-color: #eaf6ec;
+        color: var(--color-green);
+      }
+      #status-indicator.status-connected::before {
+        background-color: var(--color-green);
+      }
+
+      #status-indicator.status-disconnected {
+        background-color: #fbebec;
+        color: var(--color-red);
+      }
+      #status-indicator.status-disconnected::before {
+        background-color: var(--color-red);
+      }
+
+      .instructions {
+        margin-top: 1rem;
+        color: var(--color-text-light);
+        font-size: 0.9rem;
+      }
+
+      main {
+        padding: 1.5rem;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+
+      #message-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .message-item {
+        background-color: #fdfdff;
+        border-left: 5px solid;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message-item.action-create {
+        border-color: var(--color-green);
+      }
+      .message-item.action-update {
+        border-color: var(--color-blue);
+      }
+      .message-item.action-delete {
+        border-color: var(--color-red);
+      }
+
+      .message-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+      }
+      .message-header .action-label-create {
+        color: var(--color-green);
+      }
+      .message-header .action-label-update {
+        color: var(--color-blue);
+      }
+      .message-header .action-label-delete {
+        color: var(--color-red);
+      }
+
+      .message-details {
+        font-size: 0.9rem;
+        color: var(--color-text-light);
+        padding-left: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Product Real-Time Feed</h1>
+        <div id="status-indicator" class="status-connecting">Connecting...</div>
+        <p class="instructions">
+          Open the Django Admin and create, update, or delete a product to see a
+          live update here.
+        </p>
+      </header>
+      <main>
+        <ul id="message-list">
+          <!-- Real-time messages will appear here -->
+        </ul>
+      </main>
+    </div>
+
+    <script>
+      const statusIndicator = document.getElementById("status-indicator");
+      const messageList = document.getElementById("message-list");
+
+      // Ensure the WebSocket URL points to your Daphne server
+      const socketUrl = "ws://localhost:8000/ws/products/";
+      const productSocket = new WebSocket(socketUrl);
+
+      productSocket.onopen = function (e) {
+        console.log("WebSocket connection established!");
+        statusIndicator.textContent = "Connected";
+        statusIndicator.className = "status-connected";
+      };
+
+      productSocket.onmessage = function (e) {
+        const messageData = JSON.parse(e.data);
+        console.log("Message received:", messageData);
+
+        // The consumer sends a simple connect message, let's ignore it in the list
+        if (messageData.message) {
+          console.log("Server status message:", messageData.message);
+          return;
+        }
+
+        const { action, data } = messageData;
+
+        const li = document.createElement("li");
+        li.className = `message-item action-${action}`;
+
+        const actionLabel = action.toUpperCase();
+        const emoji = {
+          create: "✅",
+          update: "🔄",
+          delete: "❌",
+        }[action];
+
+        li.innerHTML = `
+                <div class="message-header">
+                    <span>${emoji}</span>
+                    <span class="action-label-${action}">${actionLabel}</span>
+                    <strong>${data.name}</strong>
+                </div>
+                <div class="message-details">
+                    Product ID: ${data.id} | Price: $${data.price} | Quantity: ${data.quantity}
+                </div>
+            `;
+
+        // Add the new message to the top of the list
+        messageList.prepend(li);
+      };
+
+      productSocket.onclose = function (e) {
+        console.error("WebSocket connection closed unexpectedly.", e);
+        statusIndicator.textContent = "Disconnected";
+        statusIndicator.className = "status-disconnected";
+      };
+
+      productSocket.onerror = function (e) {
+        console.error("WebSocket error:", e);
+        statusIndicator.textContent = "Connection Error";
+        statusIndicator.className = "status-disconnected";
+      };
+    </script>
+  </body>
+</html>

@@ -22,4 +22,7 @@ dependencies = [
     "djangorestframework-simplejwt",
     "whitenoise[brotli]",
     "dj-database-url>=3.0.1",
+    "channels",
+    "channels-redis",
+    "daphne",
 ]
