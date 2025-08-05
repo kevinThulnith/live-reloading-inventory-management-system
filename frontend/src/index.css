@@ -25,16 +25,11 @@
 
 body {
   height: 100vh;
-  background-position: center;
-  background: linear-gradient(
-    120deg,
-    rgb(255, 165, 0),
-    rgb(255, 140, 0),
-    rgb(255, 69, 0)
-  );
   display: flex;
   align-items: center;
   justify-content: center;
+  background-position: center;
+  background: linear-gradient(30deg, #2b2e4a, #e84545);
 }
 
 body::-webkit-scrollbar {

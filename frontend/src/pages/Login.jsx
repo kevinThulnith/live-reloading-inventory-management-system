@@ -70,7 +70,7 @@ function Login() {
 
   return (
     <motion.div
-      className="form-container w-[380px] bg-white rounded-lg shadow-md p-6 mx-auto"
+      className="form-container w-[380px] bg-slate-100 rounded-lg shadow-md p-6 mx-auto"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -88,7 +88,7 @@ function Login() {
           <motion.div key={field} className="mb-4" variants={sectionVariants}>
             <label
               htmlFor={field}
-              className="block text-1xl font-medium text-orange-600 capitalize"
+              className="block text-1xl font-medium text-orange-800 capitalize"
             >
               {field}
             </label>

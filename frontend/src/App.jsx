@@ -9,6 +9,8 @@ import Logout from "./pages/Logout.jsx";
 import { useState, useMemo } from "react";
 import api from "./api";
 import AddProduct from "./pages/AddProduct.jsx";
+import MyProducts from "./pages/MyProducts.jsx";
+import UpdateProduct from "./pages/UpdateProduct.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -46,6 +48,22 @@ function App() {
           element={
             <ProtectedRoute>
               <AddProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-products"
+          element={
+            <ProtectedRoute>
+              <MyProducts />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/update/:id"
+          element={
+            <ProtectedRoute>
+              <UpdateProduct />
             </ProtectedRoute>
           }
         />

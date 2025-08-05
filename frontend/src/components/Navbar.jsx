@@ -4,7 +4,10 @@ import { NavLink } from "react-router-dom";
 import product from "../assets/product.png";
 
 // !Navigation items configuration
-const navItems = [{ path: "/add-product", label: "Add Product" }];
+const navItems = [
+  { path: "/add-product", label: "Add Product" },
+  { path: "/my-products", label: "My Products" },
+];
 
 // !Memoized NavLink component for better performance
 const NavItem = memo(({ to, label, onClick, className }) => (
@@ -27,13 +30,13 @@ function Navbar() {
   );
 
   return (
-    <div className="fixed top-0 left-0 z-50 bg-white shadow-md w-full py-4">
+    <div className="fixed top-0 left-0 z-50 bg-slate-100 shadow-md w-full py-4">
       <div className="md:container md:mx-auto mx-4 flex justify-between items-center">
         <div className="flex">
           <img className="h-9 mr-3" src={product} alt="Logo" />
           <NavLink
             to="/"
-            className="text-orange-500"
+            className="text-orange-600"
             style={{
               fontWeight: 700,
               fontSize: "24px",
@@ -58,12 +61,12 @@ function Navbar() {
         {/* Mobile Menu */}
         <div
           className={`
-            fixed top-16 right-0 h-[calc(100vh-4rem)] xs:w-[450px] w-[80%] bg-white shadow-lg 
+            fixed top-16 right-0 h-[calc(100vh-4rem)] xs:w-[450px] w-[80%] bg-slate-100 shadow-lg 
             transform transition-transform duration-300 ease-in-out
             ${isMenuOpen ? "translate-x-0" : "translate-x-full"}
             ls:hidden flex flex-col p-4
           `}
-          style={{ color: "#999", fontWeight: 500, fontSize: "17px" }}
+          style={{ color: "#999", fontWeight: 500, fontSize: "16px" }}
         >
           {navItems.map(({ path, label }) => (
             <NavItem
@@ -85,7 +88,7 @@ function Navbar() {
         {/* Desktop Menu */}
         <div
           className="ls:flex ls:space-x-4 hidden"
-          style={{ color: "#999", fontWeight: 500, fontSize: "17px" }}
+          style={{ color: "#999", fontWeight: 500, fontSize: "16px" }}
         >
           {navItems.map(({ path, label }) => (
             <NavItem
