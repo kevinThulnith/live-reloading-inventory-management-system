@@ -11,6 +11,7 @@ import api from "./api";
 import AddProduct from "./pages/AddProduct.jsx";
 import MyProducts from "./pages/MyProducts.jsx";
 import UpdateProduct from "./pages/UpdateProduct.jsx";
+import DeleteProduct from "./pages/DeleteProduct.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -64,6 +65,14 @@ function App() {
           element={
             <ProtectedRoute>
               <UpdateProduct />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delete/:id"
+          element={
+            <ProtectedRoute>
+              <DeleteProduct />
             </ProtectedRoute>
           }
         />

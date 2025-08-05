@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 import api from "../api";
 
 function MyProducts() {
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
 
   // TODO: Fetch products
   useEffect(() => {
@@ -68,7 +68,7 @@ function MyProducts() {
           />
           <IoSearch
             style={{
-              top: "12px",
+              top: "10px",
               right: "10px",
               fontSize: "22px",
               position: "absolute",
@@ -81,27 +81,25 @@ function MyProducts() {
           className="bg-slate-100 mt-10 rounded-xl mx-auto w-[720px]"
           variants={animations.item}
         >
-          <div className="bg-orange-600 w-full h-[45px] rounded-t-xl flex">
-            <div className="flex-[0.5] text-white text-center pt-3 border-r-2 border-white font-semibold">
+          <div className="bg-orange-600 w-full h-[45px] rounded-t-xl flex text-white text-center">
+            <div className="flex-[0.5] pt-3 border-r-2 border-white font-semibold">
               Id
             </div>
-            <div className="flex-1 text-white text-center pt-3 border-r-2 border-white font-semibold">
+            <div className="flex-1 pt-3 border-r-2 border-white font-semibold">
               Name
             </div>
-            <div className="flex-1 text-white text-center pt-3 border-r-2 border-white font-semibold">
+            <div className="flex-1 pt-3 border-r-2 border-white font-semibold">
               Category
             </div>
-            <div className="flex-1 text-white text-center pt-3 border-r-2 border-white font-semibold">
+            <div className="flex-1 pt-3 border-r-2 border-white font-semibold">
               Price
             </div>
-            <div className="flex-[0.7] text-white text-center pt-3 border-r-2 border-white font-semibold">
+            <div className="flex-[0.7] pt-3 border-r-2 border-white font-semibold">
               Quantity
             </div>
-            <div className="flex-[0.8] text-white text-center pt-3 font-semibold">
-              Status
-            </div>
+            <div className="flex-[0.8] pt-3 font-semibold">Status</div>
           </div>
-          <div className="w-full h-[555px] rounded-b-xl overflow-x-auto bg-blue-50">
+          <div className="w-full h-[555px] rounded-b-xl overflow-x-auto bg-gray-100">
             {filteredProducts.map((product, index) => (
               <motion.div
                 className={`${
@@ -115,7 +113,12 @@ function MyProducts() {
                   {product.id}
                 </div>
                 <div className="flex-1 pt-2 border-r-2 border-gray-300 font-medium truncate w-[15ch] overflow-hidden whitespace-nowrap">
-                  <a href={`/update/${product.id}`} className="hover:text-orange-500">{product.name}</a>
+                  <a
+                    href={`/update/${product.id}`}
+                    className="hover:text-orange-500"
+                  >
+                    {product.name}
+                  </a>
                 </div>
                 <div className="flex-1 pt-2 border-r-2 border-gray-300">
                   {product.category.charAt(0).toUpperCase() +

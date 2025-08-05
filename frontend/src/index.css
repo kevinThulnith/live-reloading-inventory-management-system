@@ -36,6 +36,10 @@ body::-webkit-scrollbar {
   width: 0;
 }
 
+input{
+  border: none;
+}
+
 /* !Loader compenent | animation */
 .loader {
   position: fixed;

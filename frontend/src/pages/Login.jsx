@@ -86,10 +86,7 @@ function Login() {
       <form className="mt-10" onSubmit={handleSubmit}>
         {["username", "password"].map((field) => (
           <motion.div key={field} className="mb-4" variants={sectionVariants}>
-            <label
-              htmlFor={field}
-              className="block text-1xl font-medium text-orange-800 capitalize"
-            >
+            <label className="block text-1xl font-medium text-orange-800 capitalize">
               {field}
             </label>
             <input

@@ -86,10 +86,7 @@ function Register() {
       <form onSubmit={handleSubmit} className="mt-10">
         {formFields.map(({ id, type, label }) => (
           <motion.div key={id} className="mb-4" variants={sectionVariants}>
-            <label
-              htmlFor={id}
-              className="block text-1xl font-medium text-orange-800"
-            >
+            <label className="block text-1xl font-medium text-orange-800">
               {label}
             </label>
             <input

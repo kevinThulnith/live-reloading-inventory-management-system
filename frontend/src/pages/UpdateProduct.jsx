@@ -1,78 +1,64 @@
 import LoadingIndicator from "../components/LoadingIndicator";
+import { useParams, useNavigate } from "react-router-dom";
 import { FaFileCirclePlus } from "react-icons/fa6";
 import animations from "../components/animation";
 import { FaChevronDown } from "react-icons/fa";
-import { AiFillProduct } from "react-icons/ai";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { RxUpdate } from "react-icons/rx";
 import { FaTrash } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
 import api from "../api";
 
 function UpdateProduct() {
-  const { id } = useParams(); // Get product ID from URL
+  const { id } = useParams();
   const navigate = useNavigate();
-  const [image, setImage] = useState(null);
-  const [existingImageUrl, setExistingImageUrl] = useState(null);
-  const handleClearFile = () => setImage(null);
   const [loading, setLoading] = useState(false);
-  const [fetchingProduct, setFetchingProduct] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [newImageFile, setNewImageFile] = useState(null);
   const handleBrowseClick = () => document.getElementById("file-input").click();
-  const [productData, setProductData] = useState({
+  const [product, setProduct] = useState({
     name: "",
     price: "",
+    image: null,
     quantity: "",
     category: "other",
+    is_active: true,
     description: "",
   });
 
-  // Fetch existing product data
+  // TODO: Fetch product data when component mounts
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        setFetchingProduct(true);
-        const response = await api.get(`/api/products/${id}/`);
-        const product = response.data;
+    setLoading(true);
+    api
+      .get(`/api/products/${id}/`)
+      .then((res) => setProduct(res.data))
+      .catch((error) => {
+        alert("Error loading product data.");
+        console.error("Fetch error:", error);
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
-        setProductData({
-          name: product.name,
-          price: product.price,
-          quantity: product.quantity,
-          category: product.category,
-          description: product.description,
-        });
-
-        if (product.image) {
-          // Construct full URL for the image
-          const imageUrl = product.image.startsWith("http")
-            ? product.image
-            : `${import.meta.env.VITE_API_URL}${product.image}`;
-          setExistingImageUrl(imageUrl);
-        }
-      } catch (error) {
-        console.error("Error fetching product:", error);
-        alert("Error loading product data");
-        navigate("/my-products"); // Redirect back if product not found
-      } finally {
-        setFetchingProduct(false);
-      }
-    };
-
-    if (id) {
-      fetchProduct();
-    }
-  }, [id, navigate]);
-
-  // Handle input changes
+  // !Handle changes to form inputs
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setProductData((prev) => ({
-      ...prev,
-      [name]: value,
+    const { name, value, type } = e.target;
+    setProduct((prevProduct) => ({
+      ...prevProduct,
+      [name]: type === "radio" ? value === "true" : value,
     }));
   };
 
+  // !Handle selection of a new image file
+  const handleFileChange = (file) => {
+    if (file) setNewImageFile(file);
+  };
+
+  const handleClearFile = () => {
+    setNewImageFile(null);
+    document.getElementById("file-input").value = "";
+  };
+
+  // !Drag and Drop Handlers
   const handleDragOver = (event) => {
     event.preventDefault();
     setIsDragOver(true);
@@ -88,80 +74,44 @@ function UpdateProduct() {
     setIsDragOver(false);
     const file = event.dataTransfer.files[0];
     if (file) {
-      setImage(file);
+      handleFileChange(file);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const formData = new FormData();
-      formData.append("name", productData.name);
-      formData.append("description", productData.description);
-      formData.append("category", productData.category);
-      formData.append("price", productData.price);
-      formData.append("quantity", productData.quantity);
+    const formData = new FormData();
+    Object.keys(product).forEach((key) => {
+      if (key !== "image" && product[key] !== null)
+        formData.append(key, product[key]);
+    });
+    if (newImageFile) formData.append("image", newImageFile);
 
-      // Only append image if a new one was selected
-      if (image) {
-        formData.append("image", image);
-      }
-
-      const response = await api.put(`/api/products/${id}/`, formData, {
+    api
+      .patch(`/api/products/${id}/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      });
-
-      if (response.status === 200) {
-        alert("Product updated successfully!");
-        navigate("/my-products"); // Redirect to products list
-      }
-    } catch (error) {
-      console.error("Error updating product:", error);
-      let errorMessage = "Failed to update product. Please try again.";
-
-      if (error.response?.data) {
-        const errors = error.response.data;
-        if (typeof errors === "object") {
-          const errorMessages = Object.entries(errors)
-            .map(
-              ([field, messages]) =>
-                `${field}: ${
-                  Array.isArray(messages) ? messages.join(", ") : messages
-                }`
-            )
-            .join(". ");
-          errorMessage = errorMessages;
-        } else {
-          errorMessage = errors.toString();
+      })
+      .then((response) => {
+        if (response.status === 200) {
+          alert("Product updated successfully!");
+          navigate("/my-products");
         }
-      }
-
-      alert(errorMessage);
-    } finally {
-      setLoading(false);
-    }
+      })
+      .catch((error) => {
+        alert("Failed to update product.");
+        console.error("Update error:", error.response?.data || error);
+      })
+      .finally(() => setLoading(false));
   };
 
-  // Show loading while fetching product data
-  if (fetchingProduct) {
-    return (
-      <motion.div
-        id="container"
-        initial="hidden"
-        animate="visible"
-        variants={animations.container}
-        className="bg-slate-100 rounded-lg shadow-md sm:p-6 p-4 container mx-auto ss:w-[720px] w-[360px]"
-      >
-        <div className="flex items-center justify-center h-64">
-          <LoadingIndicator />
-        </div>
-      </motion.div>
-    );
-  }
+  // !Image preview logic
+  const imagePreviewSrc = newImageFile
+    ? URL.createObjectURL(newImageFile)
+    : product.image;
 
   return (
     <motion.div
@@ -176,17 +126,14 @@ function UpdateProduct() {
         variants={animations.title}
       >
         Update Product
-        <AiFillProduct />
+        <RxUpdate />
       </motion.h1>
       <motion.form
         className="mt-6 space-y-6 overflow-y-auto h-[600px] px-2"
         onSubmit={handleSubmit}
       >
         <motion.div variants={animations.item}>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-orange-600"
-          >
+          <label className="text-sm font-medium text-orange-600">
             Product Name
           </label>
           <input
@@ -194,17 +141,14 @@ function UpdateProduct() {
             id="name"
             name="name"
             type="text"
+            value={product.name}
             onChange={handleChange}
-            value={productData.name}
             placeholder="Enter product name"
-            className="mt-3 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="mt-3 w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </motion.div>
         <motion.div variants={animations.item}>
-          <label
-            htmlFor="price"
-            className="block text-sm font-medium text-orange-600"
-          >
+          <label className="text-sm font-medium text-orange-600">
             Product Price
           </label>
           <input
@@ -212,39 +156,64 @@ function UpdateProduct() {
             id="price"
             type="text"
             name="price"
+            value={product.price}
             onChange={handleChange}
-            value={productData.price}
             pattern="[0-9]+(\.[0-9][0-9]?)?"
             placeholder="Enter product price"
             title="Enter numbers only (e.g., 123 or 123.45)"
-            className="mt-3 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="mt-3 w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </motion.div>
-        <motion.div variants={animations.item}>
-          <label
-            htmlFor="quantity"
-            className="block text-sm font-medium text-orange-600"
-          >
-            Product Quantity
-          </label>
-          <input
-            required
-            type="text"
-            id="quantity"
-            name="quantity"
-            pattern="[0-9]+"
-            onChange={handleChange}
-            value={productData.quantity}
-            placeholder="Enter product quantity"
-            title="Enter numbers only (e.g., 123)"
-            className="mt-3 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
-        </motion.div>
+        <div className="flex columns-2 gap-4">
+          <motion.div variants={animations.item}>
+            <label className="text-sm font-medium text-orange-600">
+              Product Quantity
+            </label>
+            <input
+              required
+              type="text"
+              id="quantity"
+              name="quantity"
+              pattern="[0-9]+"
+              onChange={handleChange}
+              value={product.quantity}
+              placeholder="Enter product quantity"
+              title="Enter numbers only (e.g., 123)"
+              className="mt-3 w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
+          </motion.div>
+          <motion.div variants={animations.item}>
+            <label className="text-sm font-medium text-orange-600">
+              Status
+            </label>
+            <div className="mt-5 text-slate-500">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="is_active"
+                  value="true"
+                  checked={product.is_active === true}
+                  onChange={handleChange}
+                  className="form-radio"
+                />
+                <span className="ml-2">Active</span>
+              </label>
+              <label className="inline-flex items-center ml-6">
+                <input
+                  type="radio"
+                  name="is_active"
+                  value="false"
+                  checked={product.is_active === false}
+                  onChange={handleChange}
+                  className="form-radio"
+                />
+                <span className="ml-2">Discontinued</span>
+              </label>
+            </div>
+          </motion.div>
+        </div>
         <motion.div variants={animations.item} className="relative">
-          <label
-            htmlFor="category"
-            className="block text-sm font-medium text-orange-600"
-          >
+          <label className="text-sm font-medium text-orange-600">
             Product Category
           </label>
           <select
@@ -252,8 +221,9 @@ function UpdateProduct() {
             id="category"
             name="category"
             onChange={handleChange}
-            value={productData.category}
-            className="mt-3 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none appearance-none pr-8 cursor-pointer"
+            value={product.category}
+            placeholder="Select product category"
+            className="mt-3 block w-full px-3 py-2 rounded-md shadow-sm bg-white focus:outline-none appearance-none pr-8 cursor-pointer"
             style={{ backgroundPosition: "right 12px center" }}
           >
             <option className="text-gray-700 hover:bg-gray-100" value="other">
@@ -287,9 +257,8 @@ function UpdateProduct() {
         </motion.div>
         <div className="flex columns-2 gap-8">
           <motion.div variants={animations.item}>
-            {/* Image input */}
             <div className="max-w-md p-5 bg-slate-100 rounded-lg text-base-500">
-              {/* Image container */}
+              {/* Image Container */}
               <div
                 className={`relative h-[220px] aspect-square rounded-xl mb-4 border-2 border-dashed cursor-pointer transition-colors ${
                   isDragOver
@@ -301,16 +270,11 @@ function UpdateProduct() {
                 onClick={handleBrowseClick}
                 onDrop={handleDrop}
               >
-                {image ? (
+                {/* *** CORRECTED IMAGE LOGIC IS HERE *** */}
+                {imagePreviewSrc ? (
                   <img
-                    src={URL.createObjectURL(image)}
-                    alt="Selected Product"
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : existingImageUrl ? (
-                  <img
-                    src={existingImageUrl}
-                    alt="Current Product"
+                    src={imagePreviewSrc}
+                    alt="Product"
                     className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
@@ -325,26 +289,24 @@ function UpdateProduct() {
                   </div>
                 )}
               </div>
-              {/* Hidden image input */}
+
+              {/* Hidden file input */}
               <input
                 type="file"
                 id="file-input"
                 className="hidden"
                 accept=".jpg, .jpeg, .png, .img"
                 onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) setImage(file);
+                  handleFileChange(e.target.files[0]);
                 }}
               />
+
               {/* Image status bar */}
               <div className="flex items-center justify-between bg-orange-500 text-white px-4 py-2 rounded-lg">
                 <FaFileCirclePlus className="text-lg" />
                 <span className="text-sm font-medium flex-1 mx-3 truncate w-[10ch]">
-                  {image
-                    ? image.name
-                    : existingImageUrl
-                    ? "Current image"
-                    : "Not selected file"}
+                  {/* Display the new file name if it exists */}
+                  {newImageFile ? newImageFile.name : "Not selected file"}
                 </span>
                 <button
                   type="button"
@@ -353,11 +315,11 @@ function UpdateProduct() {
                     handleClearFile();
                   }}
                   className="hover:text-red-200 transition-colors"
-                  disabled={!image}
+                  disabled={!newImageFile}
                 >
                   <FaTrash
                     className={`text-sm ${
-                      !image ? "opacity-50" : "hover:scale-110"
+                      !newImageFile ? "opacity-50" : "hover:scale-110"
                     }`}
                   />
                 </button>
@@ -365,10 +327,7 @@ function UpdateProduct() {
             </div>
           </motion.div>
           <motion.div variants={animations.item}>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-orange-600"
-            >
+            <label className="text-sm font-medium text-orange-600">
               Product Description
             </label>
             <textarea
@@ -378,24 +337,33 @@ function UpdateProduct() {
               id="description"
               name="description"
               onChange={handleChange}
-              value={productData.description}
+              value={product.description}
               placeholder="Enter product description"
-              className="mt-3 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+              className="mt-3  w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             ></textarea>
           </motion.div>
         </div>
-        <motion.button
-          type="submit"
-          disabled={loading}
-          className={`font-medium mt-2 px-4 py-2 text-slate-100 rounded-lg focus:outline-none w-full ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-orange-500 hover:bg-orange-600"
-          }`}
-          variants={animations.button}
-        >
-          {loading ? "Updating..." : "Update Product"}
-        </motion.button>
+        <div className="flex columns-2 gap-4">
+          <motion.button
+            className="font-medium text-slate-100 bg-orange-600 w-full py-2 rounded-lg"
+            variants={animations.item}
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "Updating..." : "Update Product"}
+          </motion.button>
+          <motion.button
+            className="font-medium text-slate-100 bg-orange-600 w-full py-2 rounded-lg"
+            values={animations.item}
+          >
+            <a
+              href={`/delete/${id}`}
+              className="flex items-center justify-center gap-2"
+            >
+              Delete
+            </a>
+          </motion.button>
+        </div>
       </motion.form>
       {loading && <LoadingIndicator />}
     </motion.div>
