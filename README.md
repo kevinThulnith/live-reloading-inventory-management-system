@@ -75,13 +75,13 @@ flowchart TD
 
     G --> C
 
-    style A fill:#00796B,color:#fff      
-    style B fill:#0288D1,color:#fff      
-    style C fill:#C62828,color:#fff      
-    style D fill:#2E7D32,color:#fff      
-    style E fill:#EF6C00,color:#fff      
-    style F fill:#6D4C41,color:#fff      
-    style G fill:#4527A0,color:#fff      
+    style A fill:#00796B,color:#fff
+    style B fill:#0288D1,color:#fff
+    style C fill:#C62828,color:#fff
+    style D fill:#2E7D32,color:#fff
+    style E fill:#EF6C00,color:#fff
+    style F fill:#6D4C41,color:#fff
+    style G fill:#4527A0,color:#fff
 ```
 
 ## ✨ Features
@@ -148,60 +148,68 @@ cd live-reloading-inventory-management-system
 
 ### 2️⃣ Backend Setup
 
-1. **🐍 Create and activate a virtual environment:**
+1. **Install uv python package in pc via pip:**
 
    ```powershell
-   python -m venv env
-   .\env\Scripts\Activate.ps1
+   pip install uv
    ```
 
-2. **📦 Install Python dependencies:**
+2. **Install dependencies via uv:** _This installs the project and dependencies from `pyproject.toml`_
 
    ```powershell
-   pip install -e .
+   uv sync
    ```
 
-   _This installs the project and dependencies from `pyproject.toml`_
+3. **Activate auto generated vertual env:**
 
-3. **⚙️ Configure environment variables:**
+   ```powershell
+   .\.venv\Scripts\Activate.ps1 # On windows
+   ```
+
+4. **Go to backend dir:**
+
+   ```powershell
+   cd backend
+   ```
+
+5. **⚙️ Configure environment variables:**
 
    Create a `.env` file in the project root:
 
-   ```env
-   DEBUG=True
+   ```powershell
+   DEBUG=True # Important when importing images to frontend
    DJANGO_SECRET_KEY=your-secret-key-here
    DATABASE_URL=sqlite:///db.sqlite3
    REDIS_HOST=127.0.0.1
    REDIS_PORT=6379
    ```
 
-4. **🗄️ Run database migrations:**
+6. **🗄️ Run database migrations:**
 
    ```powershell
-   python backend/manage.py migrate
+   py manage.py migrate
    ```
 
-5. **👤 Create a superuser (optional):**
+7. **👤 Create a superuser (optional):**
 
    ```powershell
-   python backend/manage.py createsuperuser
+   py manage.py createsuperuser
    ```
 
-6. **📦 Populate sample products (optional):**
+8. **📦 Populate sample products (optional):** create at leaat 4 users
 
    ```powershell
-   python backend/manage.py populate_products
+   py manage.py populate_products --count 40
    ```
 
-7. **🔴 Start Redis server** (ensure it's running on localhost:6379)
-
-8. **🚀 Run the Django development server:**
+9. **🚀 Run the Django server with daphniw:**
 
    ```powershell
-   python backend/manage.py runserver
-   ```
+   daphne -b 0.0.0.0 -p 8000 backend.asgi:application
 
-   The API will be available at `http://localhost:8000`
+   # If vertual environment not acticated
+   uv run daphne -b 0.0.0.0 -p 8000 backend.asgi:application
+   ```
 
 ### 3️⃣ Frontend Setup
 
@@ -214,7 +222,7 @@ cd live-reloading-inventory-management-system
 2. **📦 Install npm dependencies:**
 
    ```powershell
-   npm install
+   npm i
    ```
 
 3. **⚙️ Configure environment variables:**
@@ -344,7 +352,8 @@ A test HTML file (`ws_test.html`) is included for WebSocket testing:
 **🐍 Backend (Django with auto-reload):**
 
 ```powershell
-python backend/manage.py runserver
+cd backend
+python manage.py runserver
 ```
 
 **⚛️ Frontend (Vite with HMR):**
