@@ -1,51 +1,38 @@
 import LoadingIndicator from "../components/LoadingIndicator";
 import animations from "../components/animation";
-import { IoBookmarks } from "react-icons/io5";
-import { useState, useEffect } from "react"; // Removed useMemo as it's not needed here
+import { AiFillProduct } from "react-icons/ai";
+import { useState, useEffect } from "react";
 import { IoSearch } from "react-icons/io5";
 import { FaPlus } from "react-icons/fa6";
 import { motion } from "framer-motion";
 import api from "../api";
 
 function Home() {
-  const [userInfo, setUserInfo] = useState({ username: "", email: "" });
-  const [products, setProducts] = useState([]); // Master list of all products
-  const [filteredProducts, setFilteredProducts] = useState([]); // List to be displayed
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(true); // Start with loading true
-  const [wsStatus, setWsStatus] = useState("Connecting..."); // State for WebSocket status
+  const [wsStatus, setWsStatus] = useState("Connecting...");
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [userInfo, setUserInfo] = useState({ username: "", email: "" });
 
-  // --- Step 1: Centralized data fetching and WebSocket connection ---
   useEffect(() => {
-    // This function runs only once when the component mounts
-
-    // --- Fetch initial data ---
+    // TODO: Fetch initial data
     const fetchInitialData = async () => {
-      try {
-        const userRes = await api.get("api/user/");
-        setUserInfo(userRes.data);
-
-        const productsRes = await api.get("api/products/");
-        setProducts(productsRes.data);
-        setFilteredProducts(productsRes.data); // Initially, filtered is all products
-      } catch (error) {
-        alert(
-          "Failed to fetch initial data. Please check your connection and try again."
-        );
-        console.error("Initial data fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(true);
+      api
+        .get("api/user/")
+        .then((res) => setUserInfo(res.data))
+        .catch((error) => alert(error));
+      api
+        .get("api/products/")
+        .then((res) => setProducts(res.data))
+        .catch((error) => alert(error));
+      setLoading(false);
     };
-
     fetchInitialData();
 
-    // --- Establish WebSocket connection ---
-
-    // 1. Get the access token from localStorage
+    // TODO: Set up WebSocket connection
     const token = localStorage.getItem("access");
-
-    // 2. If no token, don't even try to connect.
     if (!token) {
       setWsStatus("No Auth Token");
       console.error(
@@ -54,21 +41,22 @@ function Home() {
       return;
     }
 
-    // 3. Construct the WebSocket URL with the token as a query parameter
+    // TODO: Create WebSocket URL
     const socketUrl = `${
       import.meta.env.VITE_WS_URL
     }/ws/products/?token=${token}`;
     const socket = new WebSocket(socketUrl);
 
+    // TODO: Handle WebSocket events
     socket.onopen = () => {
       console.log("WebSocket connected!");
       setWsStatus("Connected");
     };
 
+    // TODO: Handle incoming messages
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data);
 
-      // Ignore the initial connection message from being added to the product list
       if (message.type === "connection_established") {
         console.log("Server message:", message.message);
         return;
@@ -77,8 +65,6 @@ function Home() {
       console.log("WebSocket message received:", message);
 
       if (message.action) {
-        // Update the master `products` state. The filtering `useEffect` below
-        // will automatically handle updating the view.
         setProducts((prevProducts) => {
           switch (message.action) {
             case "create":
@@ -99,20 +85,19 @@ function Home() {
       }
     };
 
+    // TODO: Handle WebSocket close and error events
     socket.onclose = () => {
       console.log("WebSocket disconnected.");
       setWsStatus("Disconnected");
     };
 
+    // TODO: Handle WebSocket errors
     socket.onerror = (error) => {
       console.error("WebSocket error:", error);
       setWsStatus("Error");
     };
 
-    // --- Cleanup function ---
-    // This will be called when the component unmounts to prevent memory leaks
     return () => {
-      // Check if the socket exists and is in a connecting or open state before closing
       if (
         socket &&
         (socket.readyState === WebSocket.CONNECTING ||
@@ -121,15 +106,12 @@ function Home() {
         socket.close();
       }
     };
-  }, []); // The empty dependency array `[]` ensures this effect runs only once.
+  }, []);
 
-  // --- Step 2: Keep the filtering logic as is ---
-  // This effect reacts to changes in `searchTerm` or the master `products` list
   useEffect(() => {
     let filtered;
-    if (searchTerm === "") {
-      filtered = products;
-    } else {
+    if (searchTerm === "") filtered = products;
+    else {
       const lowercasedTerm = searchTerm.toLowerCase();
       filtered = products.filter(
         (product) =>
@@ -140,14 +122,19 @@ function Home() {
     }
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
+
   return (
-    <div>
-      <div className="w-full bg-slate-100 rounded-lg shadow-md p-4 flex justify-between items-center">
+    <div className="container">
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={animations.container}
+        className="w-full bg-slate-100 rounded-lg shadow-md p-4 flex justify-between items-center"
+      >
         <div>
-          <h2 className="text-lg capitalize text-gray-600 ml-4">
+          <h2 className="text-lg text-gray-600 ml-4 font-medium">
             Welcome back, {userInfo.username}!
           </h2>
-          {/* Live Status Indicator */}
           <div className="flex items-center gap-2 text-sm text-gray-500 ml-4">
             <span
               className={`h-2.5 w-2.5 rounded-full animate-pulse ${
@@ -159,25 +146,24 @@ function Home() {
         </div>
         <a
           href="/add-product"
-          className="bg-orange-500 text-white text-lg py-2 px-4 rounded hover:bg-gray-600 outline-none ease-in duration-100"
+          className="bg-orange-500 text-white text-lg py-2 px-4 rounded-lg hover:bg-orange-600 outline-none ease-in duration-100"
         >
           <FaPlus className="inline mr-2" />
           Add Product
         </a>
-      </div>
+      </motion.div>
       <motion.div
-        id="container"
         initial="hidden"
         animate="visible"
         variants={animations.container}
-        className="bg-slate-100 mt-4 rounded-lg shadow-md sm:p-6 p-4 container mx-auto ss:w-min w-[360px]"
+        className="bg-slate-100 mt-4 rounded-lg shadow-md sm:p-6 p-4  mx-auto ss:w-min w-[360px]"
       >
         <div className="flex items-center justify-between mt-2">
           <motion.h1
             variants={animations.title}
             className="text-3xl font-semibold flex items-center gap-2 text-orange-500"
           >
-            <IoBookmarks style={{ fontSize: "26px" }} />
+            <AiFillProduct />
             Products
           </motion.h1>
           <div className="relative">
@@ -281,6 +267,7 @@ function Home() {
           </motion.div>
         </motion.div>
       </motion.div>
+      {loading && <LoadingIndicator />}
     </div>
   );
 }

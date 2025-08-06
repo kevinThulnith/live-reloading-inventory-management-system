@@ -179,7 +179,7 @@ function UpdateProduct() {
               value={product.quantity}
               placeholder="Enter product quantity"
               title="Enter numbers only (e.g., 123)"
-              className="mt-3 w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="mt-3 w-full px-3 block py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </motion.div>
           <motion.div variants={animations.item}>
